@@ -10,9 +10,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#define HI32(x) x >> 32
-#define LO32(x) x & 0xffffffffull
-
 const char hexchars[] = "0123456789abcdef";
 
 void  cmp_uint64_get_hex(char hex[], int buflen, uint64_t a[], unsigned int size)
