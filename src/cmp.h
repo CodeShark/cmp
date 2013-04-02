@@ -54,4 +54,8 @@ int  cmp_uint64_sub(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
 //   postcondition: r is set to a * b
 void cmp_uint64_mul(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size);
 
+void cmp_uint64_mul_1(uint64_t r[], uint64_t a[], uint64_t b[]);
+void cmp_uint64_mul_2(uint64_t r[], uint64_t a[], uint64_t b[]);
+void cmp_uint64_mul_4(uint64_t r[], uint64_t a[], uint64_t b[]);
+
 #endif // __CMP_H__

@@ -188,3 +188,83 @@ void cmp_uint64_mul(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
     carry += cmp_uint64_add(&r[size], &r[size], &m2[half], half, 0);
     cmp_uint64_add_word(&r[size+half], &r[size+half], half, carry, 0);
 }
+
+void cmp_uint64_mul_1(uint64_t r[], uint64_t a[], uint64_t b[])
+{
+    uint64_t hi1 = HI32(a[0]);
+    uint64_t lo1 = LO32(a[0]);
+    uint64_t hi2 = HI32(b[0]);
+    uint64_t lo2 = LO32(b[0]);
+
+    uint64_t hi = hi1 * hi2;
+    uint64_t lo = lo1 * lo2;
+    uint64_t m1 = hi1 * lo2;
+    uint64_t m2 = hi2 * lo1;
+
+    uint64_t lo_ = lo + (m1 << 32);
+    hi += (lo_ < lo);
+    lo = lo_;
+    lo_ = lo + (m2 << 32);
+    hi += (lo_ < lo);
+
+    hi += m1 >> 32;
+    hi += m2 >> 32;
+
+    r[0] = lo_;
+    r[1] = hi;
+}
+
+void cmp_uint64_mul_2(uint64_t r[], uint64_t a[], uint64_t b[])
+{
+    // r_lo = a_lo * b_lo
+    // r_hi = a_hi * b_hi
+    cmp_uint64_mul_1(r, a, b);
+    cmp_uint64_mul_1(&r[2], &a[1], &b[1]);
+
+    // m1 = a_hi * b_lo
+    // m2 = a_lo * b_hi
+    uint64_t m1[2];
+    uint64_t m2[2];
+    cmp_uint64_mul_1(m1, &a[1], b);
+    cmp_uint64_mul_1(m2, a, &b[1]);
+
+    // r += LO((m1 + m2) << 1 word)
+    int carry = 0;
+    carry += cmp_uint64_add(&r[1], &r[1], m1, 1, 0);
+    carry += cmp_uint64_add(&r[1], &r[1], m2, 1, 0);
+    cmp_uint64_add_word(&r[2], &r[2], 2, carry, 0);
+
+    // r_hi += HI((m1 + m2) << 1 word)
+    carry = 0;
+    carry += cmp_uint64_add(&r[2], &r[2], &m1[1], 1, 0);
+    carry += cmp_uint64_add(&r[2], &r[2], &m2[1], 1, 0);
+    cmp_uint64_add_word(&r[3], &r[3], 1, carry, 0);
+}
+
+void cmp_uint64_mul_4(uint64_t r[], uint64_t a[], uint64_t b[])
+{
+    // r_lo = a_lo * b_lo
+    // r_hi = a_hi * b_hi
+    cmp_uint64_mul_2(r, a, b);
+    cmp_uint64_mul_2(&r[4], &a[2], &b[2]);
+
+    // m1 = a_hi * b_lo
+    // m2 = a_lo * b_hi
+    uint64_t m1[4];
+    uint64_t m2[4];
+    cmp_uint64_mul_2(m1, &a[2], b);
+    cmp_uint64_mul_2(m2, a, &b[2]);
+
+    // r += LO((m1 + m2) << 2 words)
+    int carry = 0;
+    carry += cmp_uint64_add(&r[2], &r[2], m1, 2, 0);
+    carry += cmp_uint64_add(&r[2], &r[2], m2, 2, 0);
+    cmp_uint64_add_word(&r[4], &r[4], 4, carry, 0);
+
+    // r_hi += HI((m1 + m2) << 2 words)
+    carry = 0;
+    carry += cmp_uint64_add(&r[4], &r[4], &m1[2], 2, 0);
+    carry += cmp_uint64_add(&r[4], &r[4], &m2[2], 2, 0);
+    cmp_uint64_add_word(&r[6], &r[6], 2, carry, 0);
+}
+

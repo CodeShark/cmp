@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <cmp.h>
+#include <cmp_rand.h>
 
 #define HEX_SIZE MAX_LIMBS*16 + 1
 
@@ -13,8 +14,12 @@ int main()
     uint64_t b[MAX_LIMBS];
     uint64_t r[MAX_LIMBS];
 
-    cmp_uint64_set_hex(a, 4, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-    cmp_uint64_set_hex(b, 4, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    cmp_srand(12345);
+
+    //cmp_uint64_set_hex(a, 4, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    //cmp_uint64_set_hex(b, 4, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    cmp_uint64_rand(a, 4);
+    cmp_uint64_rand(b, 4);
     cmp_uint64_get_hex(ahex, HEX_SIZE, a, 4);
     cmp_uint64_get_hex(bhex, HEX_SIZE, b, 4);
 
@@ -30,7 +35,7 @@ int main()
     cmp_uint64_get_hex(rhex, HEX_SIZE, r, 5);
     printf("%s + 1 = %s\n", ahex, rhex);
 
-    cmp_uint64_mul(r, a, b, 4);
+    cmp_uint64_mul_4(r, a, b);
     cmp_uint64_get_hex(rhex, HEX_SIZE, r, 8);
     printf("%s * %s = %s\n", ahex, bhex, rhex);
 

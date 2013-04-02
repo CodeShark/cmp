@@ -18,7 +18,7 @@ int main()
     for (; i < 10000000; i++) {
         cmp_uint64_rand(a, 4);
         cmp_uint64_rand(b, 4);
-        cmp_uint64_mul(r, a, b, 4);
+        cmp_uint64_mul_4(r, a, b);
     }
     //cmp_uint64_get_hex(ahex, 4*16 + 1, a, 4);
     //cmp_uint64_get_hex(bhex, 4*16 + 1, b, 4);
