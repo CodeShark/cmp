@@ -32,14 +32,16 @@ void  cmp_uint64_set_hex(uint64_t r[], unsigned int size, const char hex[]);
 int  cmp_uint64_cmp(uint64_t a[], uint64_t b[], unsigned int size);
 
 // cmp_uint64_add
-//   precondition: r is one limb longer than a and b
+//   precondition: r is same size as a and b or one greater if bcarry = 1
 //   postcondition: r is set to a + b
-void cmp_uint64_add(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size);
+//   returns: carry
+int  cmp_uint64_add(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size, int bcarry);
 
 // cmp_uint64_add_word
-//   precondition: r is one limb longer than a
+//   precondition: r is same size as a or one greater if bcarry = 1
 //   postcondition: r is set to a + word
-void cmp_uint64_add_word(uint64_t r[], uint64_t a[], unsigned int size, uint64_t word);
+//   returns: carry
+int  cmp_uint64_add_word(uint64_t r[], uint64_t a[], unsigned int size, uint64_t word, int bcarry);
 
 // cmp_uint64_sub
 //   precondition: r is same size as a and b

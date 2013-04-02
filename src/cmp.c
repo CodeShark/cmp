@@ -76,7 +76,7 @@ int  cmp_uint64_cmp(uint64_t a[], uint64_t b[], unsigned int size)
     return 0;
 }
 
-void cmp_uint64_add(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
+int cmp_uint64_add(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size, int bcarry)
 {
     int carry = 0;
     int i = 0;
@@ -88,12 +88,13 @@ void cmp_uint64_add(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
                 (carry & ((r_limb == a_limb) | (r_limb == b_limb)));
         r[i] = r_limb;
     }
-    r[size] = carry;
+    if (bcarry) r[size] = carry;
+    return carry;
 }
 
 // Constant-time (depends only on size)
 // Could be speeded up by breaking if done with carries.
-void cmp_uint64_add_word(uint64_t r[], uint64_t a[], unsigned int size, uint64_t word)
+int cmp_uint64_add_word(uint64_t r[], uint64_t a[], unsigned int size, uint64_t word, int bcarry)
 {
     int i = 0;
     for (; i < size; i++) {
@@ -102,7 +103,8 @@ void cmp_uint64_add_word(uint64_t r[], uint64_t a[], unsigned int size, uint64_t
         word = (r_limb < a_limb);
         r[i] = r_limb;
     }
-    r[size] = word;
+    if (bcarry) r[size] = word;
+    return (int)word;
 }
 
 int  cmp_uint64_sub(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
@@ -139,82 +141,42 @@ void cmp_uint64_mul(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
         uint64_t hi2 = HI32(b[0]);
         uint64_t lo2 = LO32(b[0]);
 
-        uint64_t a_ = hi1 * hi2;
-        uint64_t b_ = lo1 * lo2;
-        uint64_t c_ = hi1 + lo1;
-        uint64_t d_ = hi2 + lo2;
-        int c_carry = (int)(HI32(c_));
-        int d_carry = (int)(HI32(d_));
+        uint64_t hi = hi1 * hi2;
+        uint64_t lo = lo1 * lo2;
+        uint64_t m1 = hi1 * lo2;
+        uint64_t m2 = hi2 * lo1;
 
-        // r <- a_ << 32
-        r[1] = HI32(a_);
-        r[0] = a_ << 32;
+        uint64_t lo_ = lo + (m1 << 32);
+        hi += (lo_ < lo);
+        lo = lo_;
+        lo_ = lo + (m2 << 32);
+        hi += (lo_ < lo);
 
-        // r <- r - a_ - b_
-        if (a_ > r[0]) r[1]--;
-        r[0] -= a_;
-        if (b_ > r[0]) r[1]--;
-        r[0] -= b_;
+        hi += m1 >> 32;
+        hi += m2 >> 32;
 
-        // r <- r << 32
-        r[1] = (r[1] << 32) | HI32(r[0]);
-        r[0] <<= 32;
-
-        // r <- r + (c_carry*d_carry) << 96
-        r[1] += (uint64_t)(c_carry & d_carry) << 32;
-
-        // r <- r + (c_carry*d_ + d_carry*c_) << 64
-        r[1] += d_ & -(int64_t)c_carry;
-        r[1] += c_ & -(int64_t)d_carry;
-
-        // r <- r + (c_*d_ << 32)
-        uint64_t e_ = c_ * d_;
-        r[1] += HI32(e_);
-        e_ <<= 32;
-        r[0] += e_;
-        r[1] += (r[0] < e_);
-
-        // r <- r + b_
-        r[0] += b_;
-        r[1] += (r[0] < b_);
+        r[0] = lo_;
+        r[1] = hi;
 
         return;
     }
-
+    
     unsigned int half = size/2;
-    uint64_t A[MAX_LIMBS+1];
-    uint64_t B[MAX_LIMBS+1];
-    uint64_t C[MAX_LIMBS+1];
-    uint64_t D[MAX_LIMBS+1];
-    memset(&A[MAX_LIMBS/2], 0, sizeof(uint64_t)*((MAX_LIMBS/2) + 1));
-    memset(&B[MAX_LIMBS/2], 0, sizeof(uint64_t)*((MAX_LIMBS/2) + 1));
+    cmp_uint64_mul(r, a, b, half);
+    cmp_uint64_mul(&r[size], &a[half], &b[half], half);
 
-    // A <- hi(a) * hi(b)
-    // B <- lo(a) * lo(b)
-    // C <- hi(a) + lo(a)
-    // D <- hi(b) + lo(b)
-    cmp_uint64_mul(A, &a[half], &b[half], half);
-    cmp_uint64_mul(B, a, b, half);
-    cmp_uint64_add(C, &a[half], a, half);
-    cmp_uint64_add(D, &b[half], b, half);
+    uint64_t m1[MAX_LIMBS];
+    uint64_t m2[MAX_LIMBS];
+    cmp_uint64_mul(m1, &a[half], b, half);
+    cmp_uint64_mul(m2, a, &b[half], half);
 
-    // r <- A << size + B
-    memcpy(&r[size], A, sizeof(uint64_t)*size);
-    memcpy(r, B, sizeof(uint64_t)*size);
+    int carry = 0;
+    carry += cmp_uint64_add(&r[half], &r[half], m1, half, 0);
+    carry += cmp_uint64_add(&r[half], &r[half], m2, half, 0);
+    cmp_uint64_add_word(&r[size], &r[size], size, carry, 0);
 
-    // r <- r - (A + B) << half
-    cmp_uint64_sub(&r[half], &r[half], A, size + half);
-    cmp_uint64_sub(&r[half], &r[half], B, size + half);
-
-    // r <- r + (C_carry*D_carry) << 3*half
-    if (C[half] & D[half])
-        cmp_uint64_add_word(&r[size+half], &r[size+half], half, 1);
-
-    // r <- r + (C_carry*D + D_carry*C) << size
-    if (C[half]) cmp_uint64_add(&r[size], &r[size], D, half);
-    if (D[half]) cmp_uint64_add(&r[size], &r[size], C, half);
-
-    // r <- r + C*D << half
-    cmp_uint64_mul(C, C, D, half);
-    cmp_uint64_add(&r[half], &r[half], C, size);
+    carry = 0;
+    carry += cmp_uint64_add(&r[size], &r[size], &m1[half], half, 0);
+    carry += cmp_uint64_add(&r[size], &r[size], &m2[half], half, 0);
+    cmp_uint64_add_word(&r[size+half], &r[size+half], half, carry, 0);
 }
