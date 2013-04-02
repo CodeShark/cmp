@@ -19,7 +19,7 @@
 // Size always refers to the number of words in the inputs.
 
 // cmp_uint64_get_hex
-//   returns a hex string along with its length.
+//   returns a null-terminated char array.
 void  cmp_uint64_get_hex(char hex[], int buflen, uint64_t a[], unsigned int size);
 
 // cmp_uint64_set_hex

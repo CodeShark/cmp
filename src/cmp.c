@@ -90,7 +90,7 @@ int cmp_uint64_add(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size, 
 }
 
 // Constant-time (depends only on size)
-// Could be speeded up by breaking if done with carries.
+// Could be speeded up by breaking when no more carries.
 int cmp_uint64_add_word(uint64_t r[], uint64_t a[], unsigned int size, uint64_t word, int bcarry)
 {
     int i = 0;
@@ -146,14 +146,13 @@ void cmp_uint64_mul(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
 
         uint64_t lo_ = lo + (m1 << 32);
         hi += (lo_ < lo);
-        lo = lo_;
-        lo_ = lo + (m2 << 32);
-        hi += (lo_ < lo);
+        lo = lo_ + (m2 << 32);
+        hi += (lo < lo_);
 
         hi += m1 >> 32;
         hi += m2 >> 32;
 
-        r[0] = lo_;
+        r[0] = lo;
         r[1] = hi;
 
         return;
@@ -200,14 +199,13 @@ void cmp_uint64_mul_1(uint64_t r[], uint64_t a[], uint64_t b[])
 
     uint64_t lo_ = lo + (m1 << 32);
     hi += (lo_ < lo);
-    lo = lo_;
-    lo_ = lo + (m2 << 32);
-    hi += (lo_ < lo);
+    lo = lo_ + (m2 << 32);
+    hi += (lo < lo_);
 
     hi += m1 >> 32;
     hi += m2 >> 32;
 
-    r[0] = lo_;
+    r[0] = lo;
     r[1] = hi;
 }
 
