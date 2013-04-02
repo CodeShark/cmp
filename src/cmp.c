@@ -36,13 +36,20 @@ void  cmp_uint64_get_hex(char hex[], int buflen, uint64_t a[], unsigned int size
 
 void  cmp_uint64_set_hex(uint64_t r[], unsigned int size, const char hex[])
 {
-    assert(strlen(hex) <= size*16);
+    int hexlen = strlen(hex);
+    assert(hexlen <= size*16);
+    int pad = (16 - hexlen % 16) % 16;
     int k = 0;
     int i = size - 1;
     for (; i >= 0; i--) {
         r[i] = 0;
+        if (16*i > hexlen) continue;
         int j = 15;
         for (; j >= 0; j--) {
+            if (pad > 0) {
+                pad--;
+                continue;
+            }
             char nibble = hex[k];
             if (nibble != 0) {
                 k++;
