@@ -1,15 +1,31 @@
 #include <stdio.h>
 #include <cmp.h>
 
+#define MAX_LIMBS 8
+#define HEX_SIZE MAX_LIMBS*16 + 1
+
 int main()
 {
-    uint64_t r[8] = { 0x1234567890abcdefULL, 0x10, 0, 0, 0, 0, 0, 0 };
-    cmp_uint64_set_hex(r, 8, "abcdef01234567891324354657");
+    char ahex[HEX_SIZE];
+    char bhex[HEX_SIZE];
+    char rhex[HEX_SIZE];
 
-    char hex[8*16 + 1];
-    cmp_uint64_get_hex(hex, 8*16 + 1, r, 8);
+    uint64_t a[MAX_LIMBS];
+    uint64_t b[MAX_LIMBS];
+    uint64_t r[MAX_LIMBS];
 
-    printf("%s\n", hex);
+    cmp_uint64_set_hex(a, 4, "abcdef01234567891324354657");
+    cmp_uint64_set_hex(b, 4, "123456789abcd3f48159238a238cda12");
+    cmp_uint64_get_hex(ahex, HEX_SIZE, a, 4);
+    cmp_uint64_get_hex(bhex, HEX_SIZE, b, 4);
+
+    cmp_uint64_add(r, a, b, 4);
+    cmp_uint64_get_hex(rhex, HEX_SIZE, r, 5);
+    printf("%s + %s = %s\n", ahex, bhex, rhex);
+
+    int sign = cmp_uint64_sub(r, a, b, 4);
+    cmp_uint64_get_hex(rhex, HEX_SIZE, r, 4);
+    printf("%s - %s = %s with sign = %d\n", ahex, bhex, rhex, sign);
 
     return 0;
 }

@@ -8,6 +8,7 @@
 #include "cmp.h"
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
 const char hexchars[] = "0123456789abcdef";
 
@@ -43,7 +44,7 @@ void  cmp_uint64_set_hex(uint64_t r[], unsigned int size, const char hex[])
     int i = size - 1;
     for (; i >= 0; i--) {
         r[i] = 0;
-        if (16*i > hexlen) continue;
+        if (16*i >= hexlen) continue;
         int j = 15;
         for (; j >= 0; j--) {
             if (pad > 0) {
@@ -72,7 +73,7 @@ int  cmp_uint64_cmp(uint64_t a[], uint64_t b[], unsigned int size)
     return 0;
 }
 
-int  cmp_uint64_add(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
+void cmp_uint64_add(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
 {
     int carry = 0;
     int i = 0;
@@ -84,7 +85,7 @@ int  cmp_uint64_add(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
                 (carry & ((r_limb == a_limb) | (r_limb == b_limb)));
         r[i] = r_limb;
     }
-    return carry;    
+    r[size] = carry;
 }
 
 int  cmp_uint64_sub(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
@@ -111,4 +112,8 @@ int  cmp_uint64_sub(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
         r[i] = r_limb;
     }
     return sign;
+}
+
+void cmp_uint64_mul(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
+{
 }

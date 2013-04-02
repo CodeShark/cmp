@@ -30,12 +30,19 @@ void  cmp_uint64_set_hex(uint64_t r[], unsigned int size, const char hex[]);
 int  cmp_uint64_cmp(uint64_t a[], uint64_t b[], unsigned int size);
 
 // cmp_uint64_add
-//   assumes r is same size as a and b, returns carry. 
-int  cmp_uint64_add(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size);
+//   precondition: r is one limb longer than a and b
+//   postcondition: r is set to a + b
+void cmp_uint64_add(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size);
 
 // cmp_uint64_sub
-//   assumes r is same size as a and b, computes a - b. returns sign of result.
+//   precondition: r is same size as a and b
+//   postcondition: r is set to abs(a - b)
+//   returns: sign(a - b)
 int  cmp_uint64_sub(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size);
 
+// cmp_uint64_mul
+//   precondition: r has double the size of a and b, size is a power of 2.
+//   postcondition: r is set to a * b
+void cmp_uint64_mul(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size);
 
 #endif // __CMP_H__
