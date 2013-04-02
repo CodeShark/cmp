@@ -13,8 +13,8 @@ int main()
     uint64_t b[MAX_LIMBS];
     uint64_t r[MAX_LIMBS];
 
-    cmp_uint64_set_hex(a, 4, "abcdef01234567891324354657");
-    cmp_uint64_set_hex(b, 4, "123456789abcd3f48159238a238cda12");
+    cmp_uint64_set_hex(a, 4, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    cmp_uint64_set_hex(b, 4, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
     cmp_uint64_get_hex(ahex, HEX_SIZE, a, 4);
     cmp_uint64_get_hex(bhex, HEX_SIZE, b, 4);
 

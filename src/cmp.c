@@ -133,6 +133,7 @@ int  cmp_uint64_sub(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
     return sign;
 }
 
+// Uses Karatsuba's algorithm
 void cmp_uint64_mul(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
 {
     if (size == 1) {
@@ -162,19 +163,26 @@ void cmp_uint64_mul(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
     }
     
     unsigned int half = size/2;
+
+    // r_lo = a_lo * b_lo
+    // r_hi = a_hi * b_hi
     cmp_uint64_mul(r, a, b, half);
     cmp_uint64_mul(&r[size], &a[half], &b[half], half);
 
+    // m1 = a_hi * b_lo
+    // m2 = a_lo * b_hi
     uint64_t m1[MAX_LIMBS];
     uint64_t m2[MAX_LIMBS];
     cmp_uint64_mul(m1, &a[half], b, half);
     cmp_uint64_mul(m2, a, &b[half], half);
 
+    // r += LO((m1 + m2) << half)
     int carry = 0;
     carry += cmp_uint64_add(&r[half], &r[half], m1, half, 0);
     carry += cmp_uint64_add(&r[half], &r[half], m2, half, 0);
     cmp_uint64_add_word(&r[size], &r[size], size, carry, 0);
 
+    // r_hi += HI((m1 + m2) << half)
     carry = 0;
     carry += cmp_uint64_add(&r[size], &r[size], &m1[half], half, 0);
     carry += cmp_uint64_add(&r[size], &r[size], &m2[half], half, 0);
