@@ -10,6 +10,8 @@
 
 #include <stdint.h>
 
+#define MAX_LIMBS 8
+
 // All representations are arrays of uint64_t, least significant word first.
 // Size always refers to the number of words in the inputs.
 
@@ -33,6 +35,11 @@ int  cmp_uint64_cmp(uint64_t a[], uint64_t b[], unsigned int size);
 //   precondition: r is one limb longer than a and b
 //   postcondition: r is set to a + b
 void cmp_uint64_add(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size);
+
+// cmp_uint64_add_word
+//   precondition: r is one limb longer than a
+//   postcondition: r is set to a + word
+void cmp_uint64_add_word(uint64_t r[], uint64_t a[], unsigned int size, uint64_t word);
 
 // cmp_uint64_sub
 //   precondition: r is same size as a and b
