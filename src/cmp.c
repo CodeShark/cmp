@@ -23,7 +23,7 @@ void  cmp_uint64_get_hex(char hex[], int buflen, uint64_t a[], unsigned int size
             unsigned int c = (unsigned int)(0xf & (a[i] >> (j*4)));
             bzeros |= (c > 0);
             if (bzeros)
-                hex[k++] = hexchars[(unsigned int)(0xf & (a[i] >> (j*4)))];
+                hex[k++] = hexchars[c];
         }
     }
     if (!bzeros) {
