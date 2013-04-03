@@ -21,6 +21,12 @@
 // All representations are arrays of uint64_t, least significant word first.
 // Size always refers to the number of words in the inputs.
 
+typedef struct {
+    uint64_t limbs[MAX_LIMBS];
+    unsigned int size;
+    int sign;
+} cmp_int;
+
 // cmp_uint64_get_hex
 //   returns a null-terminated char array.
 void  cmp_uint64_get_hex(char hex[], int buflen, uint64_t a[], unsigned int size);
@@ -87,5 +93,12 @@ void cmp_uint64_mul_4(uint64_t r[], uint64_t a[], uint64_t b[]);
 //   precondition: d is not zero and q has same size as n
 //   postcondition: n = q*d + r with q >= 0 and r < d
 void cmp_uint64_tdiv_qr(uint64_t q[], uint64_t r[], uint64_t n[], uint64_t d[], unsigned int size);
+
+int  cmp_int_add(cmp_int* r, cmp_int* a, cmp_int* b);
+void cmp_int_mul(cmp_int* r, cmp_int* a, cmp_int* b);
+
+// cmp_uint64_gcdext
+//   given a and b, compute x, y, g such that ax + by = g = GCD(a, b)
+void cmp_uint64_gcdext(uint64_t g[], uint64_t x[], int* signx, uint64_t y[], int* signy, uint64_t a[], uint64_t b[], unsigned int size);
 
 #endif // __CMP_H__
