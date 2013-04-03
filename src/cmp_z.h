@@ -28,6 +28,7 @@ void cmp_z_set_hex(cmp_z_t* r, const char hex[]);
 inline int cmp_z_sign(cmp_z_t* a);
 int  cmp_z_add(cmp_z_t* r, cmp_z_t* a, cmp_z_t* b);
 void cmp_z_mul(cmp_z_t* r, cmp_z_t* a, cmp_z_t* b);
+void cmp_z_mul_4(cmp_z_t* r, cmp_z_t* a, cmp_z_t* b);
 void cmp_z_gcdext_4(cmp_z_t* g, cmp_z_t* x, cmp_z_t* y, cmp_z_t* a, cmp_z_t* b);
 
 #endif // _CMP_Z_H_

@@ -46,6 +46,8 @@ int cmp_uint64_msb_word(uint64_t a);
 
 int cmp_uint64_msb(uint64_t a[], unsigned int size);
 
+unsigned int cmp_uint64_crop_size(uint64_t a[], unsigned int size);
+
 void cmp_uint64_lshift(uint64_t r[], uint64_t a[], unsigned int size, unsigned int bits);
 void cmp_uint64_rshift(uint64_t r[], uint64_t a[], unsigned int size, unsigned int bits);
 

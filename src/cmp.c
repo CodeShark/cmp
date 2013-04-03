@@ -128,6 +128,12 @@ int cmp_uint64_msb(uint64_t a[], unsigned int size)
     return -1;
 }
 
+unsigned int cmp_uint64_crop_size(uint64_t a[], unsigned int size)
+{
+    while ((size > 0) && (a[size-1] > 0)) size--;
+    return size;
+}
+
 void cmp_uint64_lshift(uint64_t r[], uint64_t a[], unsigned int size, unsigned int bits)
 {
     unsigned int ws = bits/64; // word shift
