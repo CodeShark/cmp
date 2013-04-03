@@ -2,6 +2,9 @@
 //
 // cmp.c
 //
+// Copyright (c) 2013 Eric Lombrozo
+//  all rights reserved
+//
 // multiprecision functions written in C
 //
 
