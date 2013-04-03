@@ -27,6 +27,14 @@ void  cmp_uint64_get_hex(char hex[], int buflen, uint64_t a[], unsigned int size
 //   returns a uint64_t array
 void  cmp_uint64_set_hex(uint64_t r[], unsigned int size, const char hex[]);
 
+int cmp_uint64_is_zero(uint64_t a[], unsigned int size);
+
+void cmp_uint64_set_zero(uint64_t r[], unsigned int size);
+
+void cmp_uint64_set_bit(uint64_t r[], unsigned int size, unsigned int pos, int bit);
+
+void cmp_uint64_copy(uint64_t r[], uint64_t a[], unsigned int size);
+
 // cmp_uint64_msb_word
 //   returns the place of the most significant bit in a, 0 being the least
 //   significant bit and 63 being the most.
@@ -72,10 +80,9 @@ void cmp_uint64_mul_1(uint64_t r[], uint64_t a[], uint64_t b[]);
 void cmp_uint64_mul_2(uint64_t r[], uint64_t a[], uint64_t b[]);
 void cmp_uint64_mul_4(uint64_t r[], uint64_t a[], uint64_t b[]);
 
-// cmp_uint64_tdiv_qr_word
+// cmp_uint64_tdiv_qr
 //   precondition: d is not zero and q has same size as n
 //   postcondition: n = q*d + r with q >= 0 and r < d
-//   returns: r
-uint64_t cmp_uint64_tdiv_qr_word(uint64_t q[], uint64_t n[], unsigned int size, uint64_t d);
+void cmp_uint64_tdiv_qr(uint64_t q[], uint64_t r[], uint64_t n[], uint64_t d[], unsigned int size);
 
 #endif // __CMP_H__

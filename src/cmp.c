@@ -64,6 +64,44 @@ void  cmp_uint64_set_hex(uint64_t r[], unsigned int size, const char hex[])
     }
 }
 
+int cmp_uint64_is_zero(uint64_t a[], unsigned int size)
+{
+    int i = 0;
+    for (; i < size; i++) {
+        if (a[i] != 0) return 0;
+    }
+    return 1;
+}
+
+void cmp_uint64_set_zero(uint64_t r[], unsigned int size)
+{
+    int i = 0;
+    for (; i < size; i++) r[i] = 0;
+}
+
+void cmp_uint64_set_bit(uint64_t r[], unsigned int size, unsigned int pos, int bit)
+{
+    assert(size*64 > pos);
+    int i = pos/64; // limb index
+    int j = pos%64; // bit index
+    uint64_t mask;
+    bit = (bit != 0); // force any nonzero value to one
+
+    // set to 1 if bit is one
+    mask = (uint64_t)bit << j;
+    r[i] |= mask;
+
+    // set to 0 if bit is zero
+    mask = (0xfffffffffffffffeull | (uint64_t)bit) << j;
+    r[i] &= mask;
+}
+
+void cmp_uint64_copy(uint64_t r[], uint64_t a[], unsigned int size)
+{
+    int i = 0;
+    for (; i < size; i++) r[i] = a[i];
+}
+
 // Constant-time
 int cmp_uint64_msb_word(uint64_t a)
 {
@@ -327,7 +365,30 @@ void cmp_uint64_mul_4(uint64_t r[], uint64_t a[], uint64_t b[])
     cmp_uint64_add_word(&r[6], &r[6], 2, carry, 0);
 }
 
-uint64_t cmp_uint64_tdiv_qr_word(uint64_t q[], uint64_t n[], unsigned int size, uint64_t d)
+// n = q*d + r
+void cmp_uint64_tdiv_qr(uint64_t q[], uint64_t r[], uint64_t n[], uint64_t d[], unsigned int size)
 {
-    return 0;
+    assert(!cmp_uint64_is_zero(d, size));
+
+    // q will accumulate the quotient, so initialize it to zero.
+    cmp_uint64_set_zero(q, size);
+    // copy n to r and reduce r instead of n at each iteration so n changing is not a side effect.
+    cmp_uint64_copy(r, n, size);
+
+    while (cmp_uint64_cmp(r, d, size) >= 0) {
+        // shift d over to the left just enough so that it is no larger than r.
+        int lshift = cmp_uint64_msb(r, size) - cmp_uint64_msb(d, size);
+        // we need a temporary variable to store the shifted d we'll subtract from r
+        uint64_t d_[MAX_LIMBS];
+        cmp_uint64_lshift(d_, d, size, lshift);
+        if (cmp_uint64_cmp(r, d_, size) < 0) {
+            lshift--;
+            cmp_uint64_rshift(d_, d_, size, 1);
+        }
+        // add 2^lshift to q, reduce r
+        cmp_uint64_set_bit(q, size, lshift, 1);
+        cmp_uint64_sub(r, r, d_, size);
+    }
+
+    // r is now smaller than d, so n = q*d + r with 0 <= r < d as desired
 }
