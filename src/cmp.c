@@ -6,6 +6,7 @@
 //
 
 #include "cmp.h"
+#include "constant-time.h"
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
@@ -63,6 +64,63 @@ void  cmp_uint64_set_hex(uint64_t r[], unsigned int size, const char hex[])
     }
 }
 
+// Constant-time
+int cmp_uint64_msb_word(uint64_t a)
+{
+    int msb = -((0xffffffff00000000ull & a) != 0) & 32;
+    msb    |= -((0x00000000ffff0000ull & (a >> msb)) != 0) & 16;
+    msb    |= -((0x000000000000ff00ull & (a >> msb)) != 0) & 8;
+    msb    |= -((0x00000000000000f0ull & (a >> msb)) != 0) & 4;
+    msb    |= -((0x000000000000000cull & (a >> msb)) != 0) & 2;
+    msb    |= -((0x0000000000000002ull & (a >> msb)) != 0) & 1;
+    msb    -= ((a >> msb) == 0);
+    return msb;
+}
+
+// Not constant-time
+int cmp_uint64_msb(uint64_t a[], unsigned int size)
+{
+    int i = size - 1;
+    for (; i >= 0; i--) {
+        if (a[i] != 0) return cmp_uint64_msb_word(a[i]) + 64*i;
+    }
+    return -1;
+}
+
+void cmp_uint64_lshift(uint64_t r[], uint64_t a[], unsigned int size, unsigned int bits)
+{
+    unsigned int ws = bits/64; // word shift
+    unsigned int hwbs = bits%64; // high word bit shift
+    unsigned int lwbs = 64 - hwbs; // low word bit shift
+
+    int i = size - 1;
+    for (; i >= 0; i--) {
+        int j = i - ws;
+        int k = j - 1;
+        uint64_t hword = (j >= 0) ? a[j] : 0;
+        uint64_t lword = (k >= 0) ? a[k] : 0;
+        r[i] = hword << hwbs;
+        if (lwbs < 64) r[i] |= (lword >> lwbs);
+    }
+}
+
+void cmp_uint64_rshift(uint64_t r[], uint64_t a[], unsigned int size, unsigned int bits)
+{
+    unsigned int ws = bits/64; // word shift
+    unsigned int lwbs = bits%64; // low word bit shift
+    unsigned int hwbs = 64 - lwbs; // high word bit shift
+
+    int i = 0;
+    for (; i < size; i++) {
+        int j = i + ws;
+        int k = j + 1;
+        uint64_t lword = (j < size) ? a[j] : 0;
+        uint64_t hword = (k < size) ? a[k] : 0;
+        r[i] = lword >> lwbs;
+        if (hwbs < 64) r[i] |= (hword << hwbs);
+    }
+}
+
 int  cmp_uint64_cmp(uint64_t a[], uint64_t b[], unsigned int size)
 {
     int i = size - 1;
@@ -111,8 +169,8 @@ int  cmp_uint64_sub(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
         memset(r, 0, sizeof(uint64_t)*size);
         return 0;
     }
-    if (sign < 0) {
-        // swap a and b;
+
+    if (sign < 1) {
         uint64_t* temp = a;
         a = b;
         b = temp;
@@ -131,6 +189,12 @@ int  cmp_uint64_sub(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
 }
 
 // Uses Karatsuba's algorithm
+//   a = 2^(2^(n-1)) a_hi + a_lo
+//   b = 2^(2^(n-1)) b_hi + b_lo
+//   ab = 2^(2^n)(a_hi b_hi) + 2^(2^(n-1))(a_hi b_lo + a_lo b_hi) + a_lo b_lo
+//
+//  where n is the number of bits in a, b
+//  n/2 is the number of bits in a_hi, a_lo, b_hi, b_lo
 void cmp_uint64_mul(uint64_t r[], uint64_t a[], uint64_t b[], unsigned int size)
 {
     if (size == 1) {
@@ -263,3 +327,7 @@ void cmp_uint64_mul_4(uint64_t r[], uint64_t a[], uint64_t b[])
     cmp_uint64_add_word(&r[6], &r[6], 2, carry, 0);
 }
 
+uint64_t cmp_uint64_tdiv_qr_word(uint64_t q[], uint64_t n[], unsigned int size, uint64_t d)
+{
+    return 0;
+}

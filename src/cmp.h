@@ -27,6 +27,17 @@ void  cmp_uint64_get_hex(char hex[], int buflen, uint64_t a[], unsigned int size
 //   returns a uint64_t array
 void  cmp_uint64_set_hex(uint64_t r[], unsigned int size, const char hex[]);
 
+// cmp_uint64_msb_word
+//   returns the place of the most significant bit in a, 0 being the least
+//   significant bit and 63 being the most.
+//   returns -1 if a is zero.
+int cmp_uint64_msb_word(uint64_t a);
+
+int cmp_uint64_msb(uint64_t a[], unsigned int size);
+
+void cmp_uint64_lshift(uint64_t r[], uint64_t a[], unsigned int size, unsigned int bits);
+void cmp_uint64_rshift(uint64_t r[], uint64_t a[], unsigned int size, unsigned int bits);
+
 // cmp_uint64_cmp
 //   returns
 //      1: a > b
@@ -61,44 +72,10 @@ void cmp_uint64_mul_1(uint64_t r[], uint64_t a[], uint64_t b[]);
 void cmp_uint64_mul_2(uint64_t r[], uint64_t a[], uint64_t b[]);
 void cmp_uint64_mul_4(uint64_t r[], uint64_t a[], uint64_t b[]);
 
-#define MACRO_cmp_uint64_mul(r, a, b, size) \
-    do { \
-        if (size == 1) { \
-            uint64_t hi1 = HI32(a[0]); \
-            uint64_t lo1 = LO32(a[0]); \
-            uint64_t hi2 = HI32(b[0]); \
-            uint64_t lo2 = LO32(b[0]); \
-            uint64_t hi = hi1 * hi2; \
-            uint64_t lo = lo1 * lo2; \
-            uint64_t m1 = hi1 * lo2; \
-            uint64_t m2 = hi2 * lo1; \
-            uint64_t lo_ = lo + (m1 << 32); \
-            hi += (lo_ < lo); \
-            lo = lo_; \
-            lo_ = lo + (m2 << 32); \
-            hi += (lo_ < lo); \
-            hi += m1 >> 32; \
-            hi += m2 >> 32; \
-            r[0] = lo_; \
-            r[1] = hi; \
-        } \
-        else { \
-            unsigned int half = size/2; \
-            MACRO_cmp_uint64_mul(r, a, b, half); \
-            MACRO_cmp_uint64_mul(&r[size], &a[half], &b[half], half); \
-            uint64_t m1[MAX_LIMBS]; \
-            uint64_t m2[MAX_LIMBS]; \
-            MACRO_cmp_uint64_mul(m1, &a[half], b, half); \
-            MACRO_cmp_uint64_mul(m2, a, &b[half], half); \
-            int carry = 0; \
-            carry += cmp_uint64_add(&r[half], &r[half], m1, half, 0); \
-            carry += cmp_uint64_add(&r[half], &r[half], m2, half, 0); \
-            cmp_uint64_add_word(&r[size], &r[size], size, carry, 0); \
-            carry = 0; \
-            carry += cmp_uint64_add(&r[size], &r[size], &m1[half], half, 0); \
-            carry += cmp_uint64_add(&r[size], &r[size], &m2[half], half, 0); \
-            cmp_uint64_add_word(&r[size+half], &r[size+half], half, carry, 0); \
-        } \
-    } while (0)
+// cmp_uint64_tdiv_qr_word
+//   precondition: d is not zero and q has same size as n
+//   postcondition: n = q*d + r with q >= 0 and r < d
+//   returns: r
+uint64_t cmp_uint64_tdiv_qr_word(uint64_t q[], uint64_t n[], unsigned int size, uint64_t d);
 
 #endif // __CMP_H__
