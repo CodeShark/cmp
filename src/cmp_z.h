@@ -34,7 +34,9 @@ void cmp_z_widen(cmp_z_t* r, unsigned int max_size);
 void cmp_z_add(cmp_z_t* r, cmp_z_t* a, cmp_z_t* b);
 void cmp_z_mul(cmp_z_t* r, cmp_z_t* a, cmp_z_t* b);
 void cmp_z_mul_4(cmp_z_t* r, cmp_z_t* a, cmp_z_t* b);
+void cmp_z_tdiv_qr(cmp_z_t* q, cmp_z_t* r, cmp_z_t* n, cmp_z_t* d);
 void cmp_z_gcdext_4(cmp_z_t* g, cmp_z_t* x, cmp_z_t* y, cmp_z_t* a, cmp_z_t* b);
+int cmp_z_mod_inverse_4(cmp_z_t* r, cmp_z_t* a, cmp_z_t* m);
 
 #define CMP_Z_HEX(n) ({ \
     char _nhex[130]; \

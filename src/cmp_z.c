@@ -170,3 +170,17 @@ void cmp_z_gcdext_4(cmp_z_t* g, cmp_z_t* x, cmp_z_t* y, cmp_z_t* a, cmp_z_t* b)
     // g := a_
     cmp_z_copy(g, &a_);
 }
+
+// returns 1 if successful
+int cmp_z_mod_inverse_4(cmp_z_t* r, cmp_z_t* a, cmp_z_t* m)
+{
+    cmp_z_t g, s;
+    cmp_z_gcdext_4(&g, &s, r, m, a);
+    g.limbs[0] ^= 1;
+    if (!cmp_uint64_is_zero(g.limbs, 4)) {
+        cmp_z_init(r);
+        return 0;
+    }
+    if (r->sign < 0) cmp_z_add(r, r, m);
+    return 1;
+}
