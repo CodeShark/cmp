@@ -128,9 +128,9 @@ int cmp_uint64_msb(uint64_t a[], unsigned int size)
     return -1;
 }
 
-unsigned int cmp_uint64_crop_size(uint64_t a[], unsigned int size)
+unsigned int cmp_uint64_sig_words(uint64_t a[], unsigned int size)
 {
-    while ((size > 0) && (a[size-1] > 0)) size--;
+    while ((size > 0) && (a[size-1] == 0)) size--;
     return size;
 }
 
@@ -379,15 +379,15 @@ void cmp_uint64_tdiv_qr(uint64_t q[], uint64_t r[], uint64_t n[], uint64_t d[], 
 {
     assert(!cmp_uint64_is_zero(d, size));
 
-    // q will accumulate the quotient, so initialize it to zero.
-    cmp_uint64_set_zero(q, size);
-
     // make a backup copy of d so we don't clobber it if it points to the same array as r.
     uint64_t D[MAX_LIMBS];
     cmp_uint64_copy(D, d, size);
 
     // copy n to r and reduce r instead of n at each iteration so n changing is not a side effect.
     cmp_uint64_copy(r, n, size);
+
+    // q will accumulate the quotient, so initialize it to zero.
+    cmp_uint64_set_zero(q, size);
 
     while (cmp_uint64_cmp(r, D, size) >= 0) {
         // shift D over to the left just enough so that it is no larger than r.

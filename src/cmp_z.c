@@ -45,7 +45,7 @@ void cmp_z_set_hex(cmp_z_t* r, const char hex[])
     r->sign = (hex[0] == '-');
     cmp_uint64_set_hex(r->limbs, MAX_LIMBS, &hex[r->sign]);
     r->sign = 1 - 2*r->sign;
-    cmp_z_crop(r);
+    cmp_z_shrink(r);
 }
 
 inline int cmp_z_sign(cmp_z_t* a)
@@ -58,13 +58,22 @@ inline void  cmp_z_neg(cmp_z_t* r)
     r->sign *= -1;    
 }
 
-void  cmp_z_crop(cmp_z_t* r)
+void cmp_z_shrink(cmp_z_t* r)
 {
-    r->size = cmp_uint64_crop_size(r->limbs, r->size);
+    r->size = cmp_uint64_sig_words(r->limbs, r->size);
     r->sign &= -(uint64_t)(r->size > 0);
+    if (r->size < MAX_LIMBS) memset(&r->limbs[r->size], 0, sizeof(uint64_t)*(MAX_LIMBS - r->size));
 }
 
-void  cmp_z_add(cmp_z_t* r, cmp_z_t* a, cmp_z_t* b)
+void cmp_z_widen(cmp_z_t* r, unsigned int max_size)
+{
+    // default to positive if sign is not set
+    r->sign |= (r->sign == 0);
+    r->size = max_size;
+    cmp_z_shrink(r);
+}
+
+void cmp_z_add(cmp_z_t* r, cmp_z_t* a, cmp_z_t* b)
 {
     r->size = CT_MAX(a->size, b->size);
     if (a->sign == b->sign) {
@@ -94,9 +103,23 @@ void cmp_z_mul_4(cmp_z_t* r, cmp_z_t* a, cmp_z_t* b)
     cmp_uint64_mul_4(r->limbs, a->limbs, b->limbs);
 }
 
+void cmp_z_tdiv_qr(cmp_z_t* q, cmp_z_t* r, cmp_z_t* n, cmp_z_t* d)
+{
+    unsigned int size = CT_MAX(n->size, d->size);
+    cmp_uint64_tdiv_qr(q->limbs, r->limbs, n->limbs, d->limbs, size);
+    r->sign = q->sign = n->sign * d->sign;
+    r->size = q->size = size;
+}
+
 // assumes a and b are positive
 void cmp_z_gcdext_4(cmp_z_t* g, cmp_z_t* x, cmp_z_t* y, cmp_z_t* a, cmp_z_t* b)
 {
+    // a_ := a
+    // b_ := b
+    cmp_z_t a_, b_;
+    cmp_z_copy(&a_, a);
+    cmp_z_copy(&b_, b);
+
     // nextx := 0
     // nexty := 1
     cmp_z_t nextx, nexty;
@@ -108,46 +131,42 @@ void cmp_z_gcdext_4(cmp_z_t* g, cmp_z_t* x, cmp_z_t* y, cmp_z_t* a, cmp_z_t* b)
     cmp_z_set_uint64(x, 1);
     cmp_z_init(y);
 
-    // g := a
-    // h := b
-    cmp_z_t h;
-    cmp_z_copy(g, a);
-    cmp_z_copy(&h, b);
-
     // while h != 0
-    while (cmp_z_sign(&h) != 0) {
-char hhex[8*16+2];
-cmp_z_get_hex(hhex, 8*16+2, &h);
-printf("h = %s\n", hhex);
-        // q := g div h
-        // (g, h) := (h, g mod h)
-        cmp_z_copy(g, &h);
-        cmp_z_t q, qx, qy;
-printf("before\n");
-        cmp_uint64_tdiv_qr(q.limbs, h.limbs, g->limbs, h.limbs, 4);
-printf("after\n");
-printf("h = %s\n", hhex);
-        h.size = MAX_LIMBS;
-       // cmp_z_crop(&h);
+    while (cmp_z_sign(&b_) != 0) {
+        // q := a_ div b_
+        // r := a_ mod b_
+        // (a_, b_) := (b_, r)
+        cmp_z_t q, r;
+        cmp_z_tdiv_qr(&q, &r, &a_, &b_);
+        cmp_z_shrink(&q);
+        cmp_z_shrink(&r);
+        cmp_z_copy(&a_, &b_);
+        cmp_z_copy(&b_, &r);
 
         // qx := q*nextx
         // qy := q*nexty
+        cmp_z_t qx, qy;
         cmp_z_mul_4(&qx, &q, &nextx);
         cmp_z_mul_4(&qy, &q, &nexty);
+        cmp_z_shrink(&qx);
+        cmp_z_shrink(&qy);
 
-        // x_ := x
-        // y_ := y
-        cmp_z_t x_, y_;
-        cmp_z_copy(&x_, x);
-        cmp_z_copy(&y_, y);
+        // lastx := x
+        // lasty := y
+        cmp_z_t lastx, lasty;
+        cmp_z_copy(&lastx, x);
+        cmp_z_copy(&lasty, y);
 
-        // (nextx, x) := (x_ - qx, nextx)
-        // (nexty, y) := (y_ - qy, nexty)
+        // (nextx, x) := (lastx - qx, nextx)
+        // (nexty, y) := (lasty - qy, nexty)
         cmp_z_copy(x, &nextx);
         cmp_z_copy(y, &nexty);
         cmp_z_neg(&qx);
         cmp_z_neg(&qy);
-        cmp_z_add(&nextx, &x_, &qx);
-        cmp_z_add(&nexty, &y_, &qy);
+        cmp_z_add(&nextx, &lastx, &qx);
+        cmp_z_add(&nexty, &lasty, &qy);
     }
+
+    // g := a_
+    cmp_z_copy(g, &a_);
 }

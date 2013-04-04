@@ -46,7 +46,9 @@ int cmp_uint64_msb_word(uint64_t a);
 
 int cmp_uint64_msb(uint64_t a[], unsigned int size);
 
-unsigned int cmp_uint64_crop_size(uint64_t a[], unsigned int size);
+// cmp_uint64_sig_words
+//  returns the count of significant words at most size.
+unsigned int cmp_uint64_sig_words(uint64_t a[], unsigned int size);
 
 void cmp_uint64_lshift(uint64_t r[], uint64_t a[], unsigned int size, unsigned int bits);
 void cmp_uint64_rshift(uint64_t r[], uint64_t a[], unsigned int size, unsigned int bits);
@@ -89,5 +91,11 @@ void cmp_uint64_mul_4(uint64_t r[], uint64_t a[], uint64_t b[]);
 //   precondition: d is not zero and q has same size as n
 //   postcondition: n = q*d + r with q >= 0 and r < d
 void cmp_uint64_tdiv_qr(uint64_t q[], uint64_t r[], uint64_t n[], uint64_t d[], unsigned int size);
+
+#define CMP_UINT64_HEX(n,size) ({ \
+    char _hex[130]; \
+    cmp_uint64_get_hex(_hex, 130, n, size); \
+    _hex; \
+})
 
 #endif // __CMP_H__
