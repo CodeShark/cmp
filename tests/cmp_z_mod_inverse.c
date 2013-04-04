@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <assert.h>
 
-#define ITERATIONS 100
-#define SHOW_OUTPUT
+#define ITERATIONS 100000
+//#define SHOW_OUTPUT
 
 #define SECP256K1_P "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f"
 
@@ -26,7 +26,7 @@ int main()
     printf("Inverses mod %s\n---------------\n", CMP_Z_HEX(&p));
 #endif
     int i = 0;
-    for (; i < 100; i++) {
+    for (; i < ITERATIONS; i++) {
         cmp_z_rand(&a, 4);
         int rval = cmp_z_mod_inverse_4(&ai, &a, &p);
         assert(rval == 1);
