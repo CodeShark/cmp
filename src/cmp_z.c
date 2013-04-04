@@ -9,7 +9,6 @@
 //
 
 #include "cmp_z.h"
-#include "cmp.h"
 #include "constant-time.h"
 #include <string.h>
 #include <stdio.h>
@@ -41,7 +40,12 @@ void cmp_z_get_hex(char hex[], int buflen, cmp_z_t* a)
 
 void cmp_z_set_hex(cmp_z_t* r, const char hex[])
 {
-    cmp_uint64_set_hex(r->limbs, r->size, hex);
+    cmp_z_init(r);
+    r->size = MAX_LIMBS;
+    r->sign = (hex[0] == '-');
+    cmp_uint64_set_hex(r->limbs, MAX_LIMBS, &hex[r->sign]);
+    r->sign = 1 - 2*r->sign;
+    cmp_z_crop(r);
 }
 
 inline int cmp_z_sign(cmp_z_t* a)
@@ -112,13 +116,19 @@ void cmp_z_gcdext_4(cmp_z_t* g, cmp_z_t* x, cmp_z_t* y, cmp_z_t* a, cmp_z_t* b)
 
     // while h != 0
     while (cmp_z_sign(&h) != 0) {
+char hhex[8*16+2];
+cmp_z_get_hex(hhex, 8*16+2, &h);
+printf("h = %s\n", hhex);
         // q := g div h
         // (g, h) := (h, g mod h)
         cmp_z_copy(g, &h);
         cmp_z_t q, qx, qy;
+printf("before\n");
         cmp_uint64_tdiv_qr(q.limbs, h.limbs, g->limbs, h.limbs, 4);
-        cmp_z_crop(&h);
-        cmp_z_copy(g, &h); 
+printf("after\n");
+printf("h = %s\n", hhex);
+        h.size = MAX_LIMBS;
+       // cmp_z_crop(&h);
 
         // qx := q*nextx
         // qy := q*nexty

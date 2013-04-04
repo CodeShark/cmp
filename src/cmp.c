@@ -381,15 +381,20 @@ void cmp_uint64_tdiv_qr(uint64_t q[], uint64_t r[], uint64_t n[], uint64_t d[], 
 
     // q will accumulate the quotient, so initialize it to zero.
     cmp_uint64_set_zero(q, size);
+
+    // make a backup copy of d so we don't clobber it if it points to the same array as r.
+    uint64_t D[MAX_LIMBS];
+    cmp_uint64_copy(D, d, size);
+
     // copy n to r and reduce r instead of n at each iteration so n changing is not a side effect.
     cmp_uint64_copy(r, n, size);
 
-    while (cmp_uint64_cmp(r, d, size) >= 0) {
-        // shift d over to the left just enough so that it is no larger than r.
-        int lshift = cmp_uint64_msb(r, size) - cmp_uint64_msb(d, size);
+    while (cmp_uint64_cmp(r, D, size) >= 0) {
+        // shift D over to the left just enough so that it is no larger than r.
+        int lshift = cmp_uint64_msb(r, size) - cmp_uint64_msb(D, size);
         // we need a temporary variable to store the shifted d we'll subtract from r
         uint64_t d_[MAX_LIMBS];
-        cmp_uint64_lshift(d_, d, size, lshift);
+        cmp_uint64_lshift(d_, D, size, lshift);
         if (cmp_uint64_cmp(r, d_, size) < 0) {
             lshift--;
             cmp_uint64_rshift(d_, d_, size, 1);
